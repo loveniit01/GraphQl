@@ -1,5 +1,6 @@
 package com.example.graphql.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -19,7 +20,6 @@ import io.micrometer.core.instrument.Timer;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
 
 @RestController
 public class BookController {
@@ -52,18 +52,18 @@ public class BookController {
         return service.deleteBook(id);
     }
 
-
-
     @Autowired
-private MeterRegistry meterRegistry;
+    private MeterRegistry meterRegistry;
 
-@GetMapping("time")
-public void logTiming() {
-    Timer timer = meterRegistry.find("graphql.books.query.performance.pj").timer();
-    if (timer != null) {
-        System.out.println("Count: " + timer.count());
-        System.out.println("Total Time: " + timer.totalTime(TimeUnit.SECONDS));
+    @GetMapping("time")
+    public ResponseEntity<List<String>> logTiming() {
+        Timer timer = meterRegistry.find("graphql.books.query.performance.pj").timer();
+        if (timer != null) {
+            String count = "Count: " + timer.count();
+            String totalTime = "Total Time: " + timer.totalTime(TimeUnit.SECONDS);
+            List<String> asList = Arrays.asList(count, totalTime);
+            return ResponseEntity.ok(asList);
+        }
+        return ResponseEntity.notFound().build();
     }
-}
-
 }
