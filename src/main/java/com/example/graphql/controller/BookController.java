@@ -1,6 +1,7 @@
 package com.example.graphql.controller;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -11,7 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.graphql.model.Book;
 import com.example.graphql.service.BookService;
+
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 public class BookController {
@@ -23,6 +31,7 @@ public class BookController {
         return ResponseEntity.ok(service.getAllBooks());
     }
 
+    @Timed(value = "graphql.books.query.performance.pj", description = "Time taken to fetch books")
     @QueryMapping
     public List<Book> books() {
         return service.getAllBooks();
@@ -42,4 +51,19 @@ public class BookController {
     public Boolean deleteBook(@Argument Long id) {
         return service.deleteBook(id);
     }
+
+
+
+    @Autowired
+private MeterRegistry meterRegistry;
+
+@GetMapping("time")
+public void logTiming() {
+    Timer timer = meterRegistry.find("graphql.books.query.performance.pj").timer();
+    if (timer != null) {
+        System.out.println("Count: " + timer.count());
+        System.out.println("Total Time: " + timer.totalTime(TimeUnit.SECONDS));
+    }
+}
+
 }
